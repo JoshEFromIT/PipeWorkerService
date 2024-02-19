@@ -33,16 +33,25 @@ public class PipeWorkerService : BackgroundService
                 {
                     LogServiceState("Waiting for pipe client connection...");
                     await namedPipeServer.WaitForConnectionAsync(cancellationToken);
-                    LogServiceState("Pipe client connected.");
 
-                    // Example of handling communication with the client
-                    // Read from and/or write to namedPipeServer here
+                    LogServiceState($"Pipe client connected at {DateTime.Now.ToLongTimeString()}.");
 
-                    // After handling communication, disconnect to allow for new connections
+                    var receivedBytes = new byte[1024];
+
+                    await namedPipeServer.ReadAsync(receivedBytes, 0, receivedBytes.Length, cancellationToken);
+
+                    if (receivedBytes.Length > 0)
+                    {
+                        string receivedString = Encoding.UTF8.GetString(receivedBytes);
+                        LogServiceState($"Received message: {receivedString}");
+                    }
+                    else
+                    {
+                        LogServiceState("No message received.");
+                    }
                 }
                 catch (OperationCanceledException)
                 {
-                    // Handle cancellation
                     break;
                 }
                 catch (Exception ex)
